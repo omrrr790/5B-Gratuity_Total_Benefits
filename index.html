@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 5B Quiz</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; color: #202124; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header-box { text-align: center; border-bottom: 2px solid #2f6f4f; margin-bottom: 30px; padding-bottom: 10px; }
+        .header-box h1 { color: #1e4d34; margin-bottom: 4px; }
+        .header-box h3 { color: #3d3d3d; font-weight: normal; }
+
+        #name-screen, #quiz-area, #result { display: none; }
+
+        /* General UI */
+        .btn-primary { background-color: #2f6f4f; color: white; padding: 15px 60px; border: none; border-radius: 30px; font-size: 18px; cursor: pointer; font-weight: bold; }
+        input[type="text"] { width: 80%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 18px; margin-bottom: 20px; }
+
+        /* Quiz UI */
+        #timer { position: fixed; top: 20px; right: 20px; background: #d93025; color: white; padding: 12px 25px; border-radius: 50px; font-weight: bold; font-size: 22px; z-index: 1000; }
+        .question { margin-bottom: 30px; padding: 25px; border-left: 6px solid #2f6f4f; background: #f8f9fa; border-radius: 8px; }
+        .options label { display: block; margin: 12px 0; padding: 14px; cursor: pointer; background: white; border: 1px solid #ddd; border-radius: 10px; }
+
+        #submit-btn { width: 100%; padding: 20px; background: #e8a33d; color: #1e4d34; border: none; border-radius: 10px; font-size: 22px; cursor: pointer; font-weight: bold; }
+
+        /* Result/Review UI */
+        .review-item { margin-bottom: 15px; padding: 15px; border-radius: 8px; border-width: 1px; border-style: solid; }
+        .correct-review { background: #f0fff4; border-color: #68d391; }
+        .wrong-review { background: #fff5f5; border-color: #feb2b2; }
+        .status-badge { font-weight: bold; text-transform: uppercase; font-size: 12px; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; display: inline-block; }
+        .badge-correct { background: #c6f6d5; color: #22543d; }
+        .badge-wrong { background: #fed7d7; color: #822727; }
+        .score-box { font-size: 60px; font-weight: bold; color: #2f6f4f; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <h1>Module 5B Quiz</h1>
+        <h3>Gratuity, Legal Frameworks &amp; Total Benefits Strategy</h3>
+    </div>
+
+    <!-- Start -->
+    <div id="start-screen" style="text-align: center;">
+        <p>Total MCQs: 10 | Marks: 10 | Time: 12 Mins</p>
+        <button class="btn-primary" onclick="showNameScreen()">Start Quiz</button>
+    </div>
+
+    <!-- Name Input -->
+    <div id="name-screen" style="text-align: center;">
+        <h2>Student Name</h2>
+        <input type="text" id="studentNameInput" placeholder="Enter Full Name">
+        <br>
+        <button class="btn-primary" onclick="startQuiz()">Begin Test</button>
+    </div>
+
+    <!-- Quiz -->
+    <div id="quiz-area">
+        <div id="timer">12:00</div>
+        <div id="questions-container"></div>
+        <button type="button" id="submit-btn" onclick="calculateScore()">Submit Test</button>
+    </div>
+
+    <!-- Results -->
+    <div id="result">
+        <h2 id="displayName" style="text-align: center;"></h2>
+        <div class="score-box" id="final-score"></div>
+        <p id="percentage" style="text-align: center; font-weight: bold;"></p>
+
+        <div style="margin-top: 40px;">
+            <h3 style="text-align: center;">Attempt Review</h3>
+            <div id="full-review-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questionsData = [
+        ["According to the 'Legal Basis' slide, under which law is gratuity a statutory terminal benefit in Pakistan?", "The Standing Orders Ordinance, 1968 and provincial Acts", ["The Employees' Old-Age Benefits Act, 1976", "The Standing Orders Ordinance, 1968 and provincial Acts", "The Income Tax Ordinance only", "The Workers' Welfare Fund Ordinance"]],
+        ["What exemption applies if a recognized Provident Fund trust exists?", "No statutory gratuity is mandated if the employer matches at least 50% of the employee's monthly contribution", ["No statutory gratuity is mandated if the employer matches at least 25% of the employee's monthly contribution", "Gratuity is doubled if a Provident Fund exists", "No statutory gratuity is mandated if the employer matches at least 50% of the employee's monthly contribution", "Gratuity must be paid in addition to a 100% employer match"]],
+        ["What is the statutory gratuity formula?", "(Last Drawn Monthly Wages × Completed Years) ÷ 26", ["(Last Drawn Monthly Wages × Completed Years) ÷ 30", "(Last Drawn Monthly Wages × Completed Years) ÷ 26", "(Average Monthly Wages × Completed Years) ÷ 12", "Last Drawn Monthly Wages × 26"]],
+        ["How is a service fraction treated when calculating completed years for gratuity?", "Any fraction exceeding 6 months is rounded up to the next full year", ["Fractions are always ignored", "Any fraction exceeding 3 months is rounded up", "Any fraction exceeding 6 months is rounded up to the next full year", "Fractions are paid pro-rata by the day"]],
+        ["In the Karachi Pharma example, an employee with 7 years 8 months of service and a last drawn salary of PKR 65,000 receives how much gratuity?", "PKR 20,000", ["PKR 17,500", "PKR 20,000", "PKR 520,000", "PKR 65,000"]],
+        ["Which of the following is listed as a discretionary benefit?", "Voluntary Pension Schemes (VPS)", ["EOBI", "Paid Leaves", "Voluntary Pension Schemes (VPS)", "Workers' Welfare Fund (WWF)"]],
+        ["Which of the following is listed as a mandatory (non-negotiable) legal provision?", "Workers' Profit Participation Fund (WPPF), for qualifying entities", ["Company Maintained Cars (CMC)", "Voluntary Pension Schemes", "Comprehensive OPD health insurance for family dependents", "Workers' Profit Participation Fund (WPPF), for qualifying entities"]],
+        ["For a gross salary of PKR 300,000 with EOBI of PKR 407 and income tax of PKR 35,000, what is the net take-home pay?", "PKR 264,593", ["PKR 264,593", "PKR 265,000", "PKR 299,593", "PKR 302,035"]],
+        ["Using the capstone example, what is the total monthly CTC (before group insurance loaders) for a gross salary of PKR 300,000 and employer EOBI of PKR 2,035?", "PKR 302,035", ["PKR 298,000", "PKR 300,407", "PKR 302,035", "PKR 335,000"]],
+        ["Why do multi-city offices across Punjab, Sindh, KPK and Balochistan face different labor rules?", "After the 18th Constitutional Amendment, labor legislation is provincial", ["Labor legislation is entirely federal", "After the 18th Constitutional Amendment, labor legislation is provincial", "Each employer sets its own labor law", "Only minimum wage varies, everything else is uniform"]]
+    ];
+
+    // Paste your Google Apps Script Web App URL here
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxGZhQCV2OJeqx28hyi18_zYAMpPFQ2I_NXRCjsQV21gn4olnqQ2ExoEiCIrQ-l61_5ow/exec";
+
+    let studentName = "";
+    let timeLeft = 12 * 60;
+    let timerInterval;
+
+    function sendToGoogleSheet(name, score, total) {
+        if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.indexOf("PASTE_YOUR") === 0) {
+            console.warn("Google Sheet URL not set — skipping sheet submission.");
+            return;
+        }
+        const payload = new URLSearchParams();
+        payload.append("name", name);
+        payload.append("score", score);
+        payload.append("total", total);
+        payload.append("quiz", "Module 5B (Gratuity, Legal Frameworks & Total Benefits)");
+        payload.append("date", new Date().toLocaleString());
+
+        fetch(GOOGLE_SHEET_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: payload.toString()
+        }).catch(err => console.error("Sheet submission failed:", err));
+    }
+
+    function showNameScreen() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('name-screen').style.display = 'block';
+    }
+
+    function startQuiz() {
+        studentName = document.getElementById('studentNameInput').value;
+        if (!studentName.trim()) { alert("Please enter your name."); return; }
+        document.getElementById('name-screen').style.display = 'none';
+        document.getElementById('quiz-area').style.display = 'block';
+        renderQuestions();
+        startTimer();
+    }
+
+    function renderQuestions() {
+        const container = document.getElementById('questions-container');
+        questionsData.forEach((item, index) => {
+            let optionsHTML = '';
+            item[2].forEach(opt => {
+                optionsHTML += `<label><input type="radio" name="q${index}" value="${opt}"> ${opt}</label>`;
+            });
+            container.innerHTML += `<div class="question"><p>Q${index + 1}: ${item[0]}</p><div class="options">${optionsHTML}</div></div>`;
+        });
+    }
+
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            document.getElementById('timer').innerHTML = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if (timeLeft <= 0) calculateScore();
+            timeLeft--;
+        }, 1000);
+    }
+
+    function calculateScore() {
+        clearInterval(timerInterval);
+        let score = 0;
+        let reviewHTML = "";
+
+        questionsData.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            const userAnswer = selected ? selected.value : "Not Attempted";
+            const isCorrect = (userAnswer === item[1]);
+
+            if (isCorrect) score++;
+
+            reviewHTML += `
+                <div class="review-item ${isCorrect ? 'correct-review' : 'wrong-review'}">
+                    <span class="status-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">${isCorrect ? 'Correct' : 'Wrong'}</span>
+                    <div style="font-weight: bold; margin-bottom: 5px;">Question ${index+1}: ${item[0]}</div>
+                    <div>Your Choice: <span style="font-weight: bold; color: ${isCorrect ? '#2f855a' : '#c53030'};">${userAnswer}</span></div>
+                    ${isCorrect ? '' : `<div>Correct Answer: <span style="font-weight: bold; color: #2f855a;">${item[1]}</span></div>`}
+                </div>`;
+        });
+
+        document.getElementById('quiz-area').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('displayName').innerText = studentName;
+        document.getElementById('final-score').innerText = `${score} / 10`;
+        document.getElementById('percentage').innerText = `Result: ${(score/10*100).toFixed(0)}%`;
+        document.getElementById('full-review-list').innerHTML = reviewHTML;
+        window.scrollTo(0,0);
+
+        sendToGoogleSheet(studentName, score, 10);
+    }
+</script>
+
+</body>
+</html>
